@@ -1,10 +1,12 @@
-from src.schemas.inventory import (
+from src.inventory.controller import router
+from src.inventory.schema import (
     AddInventoryRequest,
     AddInventoryResponse,
     InventoryItem,
 )
 
 __all__ = [
+    "router",
     "AddInventoryRequest",
     "AddInventoryResponse",
     "InventoryItem",
