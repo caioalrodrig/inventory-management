@@ -1,0 +1,14 @@
+services:
+  backend:
+    build:
+      context: back-end
+      dockerfile: Dockerfile
+    container_name: nlt-backend
+    ports:
+      - "8000:8000"
+    networks:
+      - app_net
+
+networks:
+  app_net:
+    driver: bridge

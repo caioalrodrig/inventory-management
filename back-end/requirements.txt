@@ -1,0 +1,11 @@
+# Web framework
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+
+# Relational database (ORM <-> PostgreSQL)
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.9
+alembic>=1.14.0
+
+# Celery for RabbitMQ
+celery[amqp]>=5.4.0
