@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 
-app = FastAPI()
+from src.controller.inventory_controller import router as inventory_router
 
-print("Hello world")
+app = FastAPI()
+app.include_router(inventory_router, prefix="/api")
