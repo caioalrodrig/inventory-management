@@ -1,4 +1,7 @@
-from pydantic import BaseModel
+import uuid
+from datetime import datetime
+
+from pydantic import BaseModel, ConfigDict
 
 
 class AddInventoryRequest(BaseModel):
@@ -11,15 +14,17 @@ class AddInventoryRequest(BaseModel):
 class AddInventoryResponse(BaseModel):
     """Response for POST /api/inventory/ (202)."""
 
-    id: int
+    id: uuid.UUID
     identifier: str
 
 
 class InventoryItem(BaseModel):
     """Single inventory item (GET /api/inventory/<id>/)."""
 
-    id: int
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
     identifier: str
     name: str | None = None
     quantity: int | None = None
-    last_updated: str | None = None
+    last_updated: datetime | None = None

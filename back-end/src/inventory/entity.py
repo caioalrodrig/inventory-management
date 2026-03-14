@@ -1,6 +1,3 @@
-"""
-Inventory domain entity (ORM model).
-"""
 import uuid
 from datetime import datetime
 from typing import Optional
@@ -22,8 +19,12 @@ class InventoryItemEntity(Base):
         primary_key=True,
         default=uuid.uuid4,
     )
-    identifier: Mapped[str] = mapped_column(String(255), unique=True, nullable=False) # normalized name
-    name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True) # defined by the user
+    identifier: Mapped[str] = mapped_column(
+        String(255), unique=True, nullable=False
+    )  # normalized name
+    name: Mapped[Optional[str]] = mapped_column(
+        String(255), nullable=True
+    )  # defined by the user
     quantity: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     last_updated: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True),
