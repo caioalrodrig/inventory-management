@@ -1,14 +1,43 @@
 services:
   backend:
+    profiles:
+      - prod
     build:
       context: back-end
       dockerfile: Dockerfile
     container_name: nlt-backend
     ports:
       - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/database_nlt
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app_net
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: nlt-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: database_nlt
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       - app_net
 
 networks:
   app_net:
     driver: bridge
+
+volumes:
+  postgres_data:
