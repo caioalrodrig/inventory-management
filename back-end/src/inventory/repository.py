@@ -35,13 +35,13 @@ class InventoryRepository:
             quantity=quantity,
         )
         self._db.add(entity)
-        self._db.commit()
+        self._db.flush()
         self._db.refresh(entity)
         return entity
 
     def save(self, entity: InventoryItemEntity) -> None:
-        """Commit and refresh entity (after in-memory changes)."""
-        self._db.commit()
+        """Flush and refresh entity."""
+        self._db.flush()
         self._db.refresh(entity)
 
     def list_all(

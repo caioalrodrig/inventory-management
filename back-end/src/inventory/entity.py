@@ -10,8 +10,6 @@ from src.database import Base
 
 
 class InventoryItemEntity(Base):
-    """Inventory item table."""
-
     __tablename__ = "inventory_items"
 
     id: Mapped[uuid.UUID] = mapped_column(

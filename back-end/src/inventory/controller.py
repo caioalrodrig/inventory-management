@@ -2,7 +2,10 @@ import uuid
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 
-from src.inventory.dependencies import get_inventory_service
+from src.inventory.dependencies import (
+    get_inventory_service,
+    get_inventory_service_tx,
+)
 from src.inventory.schema import (
     AddInventoryRequest,
     AddInventoryResponse,
@@ -25,7 +28,7 @@ router = APIRouter(
 )
 def upsert_inventory_item(
     body: AddInventoryRequest,
-    service: InventoryService = Depends(get_inventory_service),
+    service: InventoryService = Depends(get_inventory_service_tx),
 ):
     identifier = InventoryUtils.normalize_identifier(body.name)
     return service.upsert_item(
@@ -64,7 +67,7 @@ def get_inventory_item(
 def remove_inventory_quantity(
     item_id: uuid.UUID,
     quantity: int = Body(embed=True),
-    service: InventoryService = Depends(get_inventory_service),
+    service: InventoryService = Depends(get_inventory_service_tx),
 ):
     try:
         return service.remove_quantity(item_id=item_id, quantity=quantity)

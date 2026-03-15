@@ -24,7 +24,7 @@ class Base(DeclarativeBase):
 
 
 def get_db():
-    """Dependency for FastAPI: yields a DB session and closes it after request."""
+    """Session for read-only operations. No commit; use for queries only."""
     db = SessionLocal()
     try:
         yield db
@@ -32,8 +32,20 @@ def get_db():
         db.close()
 
 
+def get_db_tx():
+    with engine.connect().execution_options(
+        isolation_level="REPEATABLE READ"
+    ) as conn:
+        with SessionLocal(bind=conn) as session:
+            try:
+                yield session
+                session.commit()
+            except Exception:
+                session.rollback()
+                raise
+
+
 def create_tables() -> None:
-    """Create tables from entities. Call once at app startup."""
     from src.inventory.entity import InventoryItemEntity
 
     Base.metadata.create_all(bind=engine)
