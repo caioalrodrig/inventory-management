@@ -48,24 +48,25 @@ class InventoryRepository:
         self,
         *,
         order_by: Optional[str] = None,
-        direction: Optional[str] = None,
+        direction: Optional[str] = "asc",
     ) -> list[InventoryItemEntity]:
-        """Return all entities with optional ordering."""
         stmt = select(InventoryItemEntity)
-        if (
-            order_by
-            and direction
-            and order_by in ("name", "quantity", "last_updated")
-        ):
+
+        safe_direction = (direction or "asc").lower()
+
+        if order_by and order_by in ("name", "quantity", "last_updated"):
             col = getattr(InventoryItemEntity, order_by)
             stmt = stmt.order_by(
-                col.desc() if direction.lower() == "desc" else col.asc()
+                col.desc() if safe_direction == "desc" else col.asc()
             )
         else:
+            # Fallback logic for critical items (quantity < 5)
             critical_first = case((InventoryItemEntity.quantity < 5, 0), else_=1)
             stmt = stmt.order_by(
-                critical_first,
+                critical_first.asc(),
                 InventoryItemEntity.last_updated.desc().nulls_last(),
                 InventoryItemEntity.name.asc().nulls_last(),
             )
-        return list(self._db.execute(stmt).scalars().all())
+
+        result = self._db.execute(stmt)
+        return list(result.scalars().all())
