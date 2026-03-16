@@ -4,6 +4,14 @@ import { useInventoryList, useRemoveInventoryQuantity } from "@/api/inventory";
 import type { InventoryItem } from "@/types/inventory";
 import { ArrowUpDown, Minus, Package } from "lucide-react";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 type SortKey = "name" | "quantity" | "last_updated";
 type Direction = "asc" | "desc";
@@ -11,6 +19,8 @@ type Direction = "asc" | "desc";
 export default function Inventory() {
   const [sortBy, setSortBy] = useState<SortKey>("quantity");
   const [direction, setDirection] = useState<Direction>("asc");
+  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const [removeQty, setRemoveQty] = useState<string>("");
 
   const { data: items = [], isLoading, isError, error } = useInventoryList(
     sortBy,
@@ -26,14 +36,34 @@ export default function Inventory() {
     }
   };
 
-  const handleRemove = (item: InventoryItem) => {
-    const qty = item.quantity ?? 0;
-    if (qty <= 0) return;
+  const openRemoveDialog = (item: InventoryItem) => {
+    if ((item.quantity ?? 0) <= 0) return;
+    setSelectedItem(item);
+    setRemoveQty("1");
+  };
+
+  const handleConfirmRemove = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedItem) return;
+    const currentQty = selectedItem.quantity ?? 0;
+    const qtyNumber = parseInt(removeQty, 10);
+    if (Number.isNaN(qtyNumber) || qtyNumber <= 0) {
+      toast.error("Informe uma quantidade maior que zero.");
+      return;
+    }
+    if (qtyNumber > currentQty) {
+      toast.error("Quantidade a remover não pode ser maior que o estoque atual.");
+      return;
+    }
     removeMutation.mutate(
-      { itemId: item.id, quantity: qty },
+      { itemId: selectedItem.id, quantity: qtyNumber },
       {
         onSuccess: () => {
-          toast.success(`Removido: ${item.name ?? item.identifier}`);
+          toast.success(
+            `Removidos ${qtyNumber} de ${selectedItem.name ?? selectedItem.identifier}`
+          );
+          setSelectedItem(null);
+          setRemoveQty("");
         },
         onError: (err) => {
           toast.error(err instanceof Error ? err.message : "Erro ao remover");
@@ -146,7 +176,7 @@ export default function Inventory() {
                 </td>
                 <td className="px-6 py-4 text-right">
                   <button
-                    onClick={() => handleRemove(item)}
+                    onClick={() => openRemoveDialog(item)}
                     disabled={removeMutation.isPending || (item.quantity ?? 0) <= 0}
                     className="text-xs font-semibold text-destructive hover:bg-destructive/10 px-3 py-1.5 rounded-md transition-colors inline-flex items-center gap-1 disabled:opacity-50"
                   >
@@ -159,6 +189,53 @@ export default function Inventory() {
           </tbody>
         </table>
       </section>
+
+      <Dialog open={!!selectedItem} onOpenChange={(open) => !open && setSelectedItem(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Remover quantidade do estoque</DialogTitle>
+            <DialogDescription>
+              Informe quanto deseja remover de{" "}
+              <span className="font-semibold">
+                {selectedItem?.name ?? selectedItem?.identifier}
+              </span>{" "}
+              (estoque atual: {selectedItem?.quantity ?? 0}).
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleConfirmRemove} className="flex flex-col gap-4 mt-2">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Quantidade a remover
+              </label>
+              <input
+                type="number"
+                min={1}
+                max={selectedItem?.quantity ?? undefined}
+                value={removeQty}
+                onChange={(e) => setRemoveQty(e.target.value)}
+                required
+                className="border border-input rounded-md px-3 py-2 text-sm bg-background outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
+            <DialogFooter>
+              <button
+                type="button"
+                onClick={() => setSelectedItem(null)}
+                className="px-3 py-2 text-sm rounded-md border border-input text-muted-foreground hover:bg-muted"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={removeMutation.isPending}
+                className="bg-destructive text-destructive-foreground py-2 px-4 rounded-lg text-sm font-semibold hover:brightness-110 transition-all active:scale-95 disabled:opacity-50"
+              >
+                {removeMutation.isPending ? "Removendo..." : "Confirmar remoção"}
+              </button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
