@@ -3,13 +3,14 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.database import create_tables
+from src.database import create_tables, wait_for_db
 from src.inventory import router as inventory_router
 
 
 # makes DB available before FastAPI startup
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    wait_for_db()
     create_tables()
     yield
 

@@ -19,6 +19,20 @@ services:
     networks:
       - app_net
 
+  frontend:
+    profiles:
+      - prod
+    build:
+      context: front-end
+      dockerfile: Dockerfile
+    container_name: nlt-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    networks:
+      - app_net
+
   rabbitmq:
     image: rabbitmq:latest
     container_name: nlt-rabbitmq
