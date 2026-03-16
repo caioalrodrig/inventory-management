@@ -38,9 +38,11 @@ export default function AddItemDialog({ open, onOpenChange }: Props) {
           onOpenChange(false);
         },
         onError: (err) => {
-          toast.error(err instanceof Error ? err.message : "Erro ao adicionar item");
+          toast.error(
+            err instanceof Error ? err.message : "Erro ao adicionar item",
+          );
         },
-      }
+      },
     );
   };
 

@@ -1,8 +1,18 @@
-export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+let cachedBaseUrl: string | null = null;
+
+export function getApiBaseUrl(): string {
+  if (cachedBaseUrl) return cachedBaseUrl;
+
+  const raw = import.meta.env.VITE_API_BASE_URL;
+  if (!raw) {
+    throw new Error("VITE_API_BASE_URL is not defined.");
+  }
+  cachedBaseUrl = raw.replace(/\/$/, "");
+  return cachedBaseUrl;
+}
 
 export function apiUrl(path: string): string {
-  const base = API_BASE_URL.replace(/\/$/, "");
+  const base = getApiBaseUrl();
   const p = path.startsWith("/") ? path : `/${path}`;
   return `${base}${p}`;
 }
