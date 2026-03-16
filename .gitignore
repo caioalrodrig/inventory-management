@@ -51,4 +51,19 @@ dmypy.json
 *.log
 logs/
 
-Desafio Técnico - Vaga DEV Pl.pdf
+# --- Frontend (Node / Vite) ---
+node_modules/
+front-end/node_modules/
+dist/
+front-end/dist/
+dist-ssr/
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.cache/
+front-end/.cache/
+.vite/
+front-end/.vite/
+*.tsbuildinfo

@@ -37,11 +37,7 @@ def upsert_inventory_item(
         quantity=body.quantity,
         name=body.name,
     )
-    run_inventory_event.delay(
-        event_type="ADD_OR_UPDATE",
-        item_id=str(result.id),
-        quantity=body.quantity,
-    )
+    run_inventory_event.delay(event_type="ADD_OR_UPDATE")
 
     return result
 
@@ -79,11 +75,7 @@ def remove_inventory_quantity(
 ):
     try:
         item = service.remove_quantity(item_id=item_id, quantity=quantity)
-        run_inventory_event.delay(
-            event_type="REMOVE",
-            item_id=str(item_id),
-            quantity=quantity,
-        )
+        run_inventory_event.delay(event_type="REMOVE")
 
         return item
     except ValueError as e:
