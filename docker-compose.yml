@@ -10,8 +10,38 @@ services:
       - "8000:8000"
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/database_nlt
+      CELERY_BROKER_URL: amqp://guest:guest@rabbitmq:5672//
     depends_on:
       postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - app_net
+
+  rabbitmq:
+    image: rabbitmq:latest
+    container_name: nlt-rabbitmq
+    ports:
+      - "5672:5672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app_net
+
+  celery_worker:
+    build:
+      context: back-end
+      dockerfile: Dockerfile
+    container_name: nlt-celery-worker
+    command: celery -A src.celery_app.celery_app worker --loglevel=info
+    environment:
+      CELERY_BROKER_URL: amqp://guest:guest@rabbitmq:5672//
+    depends_on:
+      rabbitmq:
         condition: service_healthy
     networks:
       - app_net

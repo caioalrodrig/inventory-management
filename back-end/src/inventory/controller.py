@@ -13,6 +13,7 @@ from src.inventory.schema import (
 )
 from src.inventory.service import InventoryService
 from src.inventory.utils import InventoryUtils
+from src.inventory.tasks import run_inventory_event
 
 
 router = APIRouter(
@@ -31,11 +32,18 @@ def upsert_inventory_item(
     service: InventoryService = Depends(get_inventory_service_tx),
 ):
     identifier = InventoryUtils.normalize_identifier(body.name)
-    return service.upsert_item(
+    result = service.upsert_item(
         identifier=identifier,
         quantity=body.quantity,
         name=body.name,
     )
+    run_inventory_event.delay(
+        event_type="ADD_OR_UPDATE",
+        item_id=str(result.id),
+        quantity=body.quantity,
+    )
+
+    return result
 
 
 @router.get("/", response_model=list[InventoryItem])
@@ -70,7 +78,14 @@ def remove_inventory_quantity(
     service: InventoryService = Depends(get_inventory_service_tx),
 ):
     try:
-        return service.remove_quantity(item_id=item_id, quantity=quantity)
+        item = service.remove_quantity(item_id=item_id, quantity=quantity)
+        run_inventory_event.delay(
+            event_type="REMOVE",
+            item_id=str(item_id),
+            quantity=quantity,
+        )
+
+        return item
     except ValueError as e:
         if "not found" in str(e).lower():
             raise HTTPException(
